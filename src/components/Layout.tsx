@@ -8,15 +8,15 @@ export function Layout() {
       <header className="sticky top-0 z-50 border-b border-navy/10 bg-navy shadow-md">
         <TrustStrip />
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4">
-          <Link to="/" className="group flex shrink-0 items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-navy">
-            <img
-              src="/logo.svg"
-              alt="החזר קליק"
-              className="h-8 w-auto sm:h-9"
-              width={180}
-              height={31}
-              decoding="async"
-            />
+          <Link
+            to="/"
+            className="group flex shrink-0 items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-navy"
+            aria-label="החזר קליק"
+          >
+            <span style={{ fontWeight: 'bold', fontSize: '1.3rem' }}>
+              <span style={{ color: '#f8fafc' }}>החזר</span>
+              <span style={{ color: '#c9a84c' }}> קליק</span>
+            </span>
           </Link>
           <nav className="flex items-center gap-2 sm:gap-4" aria-label="ניווט ראשי">
             <Link
