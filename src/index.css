@@ -1,0 +1,25 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Assistant', system-ui, sans-serif;
+  --color-navy: #1e3a5f;
+  --color-navy-light: #2a4d7a;
+  --color-navy-dark: #152a45;
+  --color-gold: #c9a84c;
+  --color-gold-light: #d4b85f;
+  --color-gold-muted: rgba(201, 168, 76, 0.15);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100dvh;
+}
