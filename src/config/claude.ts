@@ -1,2 +1,2 @@
-/** מצב דמו לניתוח טופס ובקשות Claude — לשנות ל-false כשמשתמשים ב-API אמיתי */
-export const CLAUDE_DEMO_MODE = true
+/** false = API אמיתי • true = דמו ללא קריאות Claude */
+export const CLAUDE_DEMO_MODE = false

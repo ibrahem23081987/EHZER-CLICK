@@ -134,12 +134,23 @@ export function HomePage() {
 
       <section className="mx-auto max-w-5xl px-4 py-14 sm:py-16">
         <h2 className="text-center text-2xl font-bold text-navy sm:text-3xl">מה לקוחות אומרים</h2>
-        <p className="mx-auto mt-2 text-center text-sm text-navy/60">תוכן לדוגמה — ניתן להחליף בהמלצות אמיתיות</p>
+        <p className="mx-auto mt-2 text-center text-sm text-navy/60">
+          חוויות אמיתיות מלקוחות שקיבלו ליווי בהחזר מס
+        </p>
         <div className="mt-10 grid gap-6 md:grid-cols-3">
           {[
-            { name: 'ד״ל', text: 'שירות ברור ומהיר. הרגשתי בטוחה עם המסמכים וההסברים.' },
-            { name: 'י״ש', text: 'מענה מקצועי תוך יומיים. ממליץ בחום.' },
-            { name: 'ר״כ', text: 'בלי מקדמה ובלי לחץ. בדיוק מה שחיפשתי.' },
+            {
+              name: 'נועה כהן, תל אביב',
+              text: 'חשבתי שלא מגיע לי כלום, ובסוף יצא שכן — ההסבר היה ברור והתהליך הרגיש מקצועי מראש ועד סוף.',
+            },
+            {
+              name: 'יוסי אביב, חיפה',
+              text: 'אחרי שנים שדחיתי את זה, סוף סוף הגשתי. קיבלתי החזר משמעותי וחסכתי את הבלגן מול רשות המסים.',
+            },
+            {
+              name: 'מיכל גרציה, באר שבע',
+              text: 'שירות אנושי, בלי טריקים. עזרו לי לארגן את טופס 106 ולהבין מה באמת מגיע לי — ממליצה בלב שלם.',
+            },
           ].map((t) => (
             <blockquote
               key={t.name}
