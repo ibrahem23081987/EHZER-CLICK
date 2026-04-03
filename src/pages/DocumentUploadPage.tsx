@@ -32,6 +32,16 @@ export type UploadLocationState = {
   estimatedRange?: string
   annualIncome?: AnnualIncomeBracket | null
   specialSituations?: SpecialSituationsState
+  /** מספר ילדים מדויק כשבשאלון הקריטי נענה ״כן״ על ילדים */
+  childrenCountForRefund?: number
+}
+
+function resolvedChildrenCount(state: UploadLocationState): number {
+  const c = state.childrenCountForRefund
+  if (typeof c === 'number' && Number.isFinite(c) && c >= 0) {
+    return Math.min(10, Math.floor(c))
+  }
+  return childrenUnder18BandToCount(state.personal?.childrenUnder18Count)
 }
 
 function formatError(e: unknown): string {
@@ -87,7 +97,7 @@ export function DocumentUploadPage() {
       const files = showSecond106 && form106Second ? [form106, form106Second] : [form106]
       const r = await analyzeForm106FilesWithClaude(files, {
         maritalStatus: state.personal?.maritalStatus ?? 'single',
-        childrenCount: childrenUnder18BandToCount(state.personal?.childrenUnder18Count),
+        childrenCount: resolvedChildrenCount(state),
         specialAdjustments: specialAdj && Object.keys(specialAdj).length > 0 ? specialAdj : undefined,
       })
       setResult(r)
@@ -115,7 +125,7 @@ export function DocumentUploadPage() {
         maritalStatusHe: maritalStatusLabelHe(p?.maritalStatus),
         maritalStatus: p?.maritalStatus ?? null,
         childrenLabel: childrenUnder18BandLabel(p?.childrenUnder18Count),
-        childrenCount: childrenUnder18BandToCount(p?.childrenUnder18Count),
+        childrenCount: resolvedChildrenCount(state),
         grossSalary: result.grossSalary ?? 0,
         taxWithheld: result.taxWithheld ?? 0,
         creditPoints: result.creditPoints,

@@ -108,6 +108,7 @@ const SPECIAL_LINE_ORDER = [
   'disabilityRecognized',
   'academicDegree',
   'charityDonations',
+  'lifeInsurancePremiums',
   'selfEmployedSameYear',
   'foreignIncome',
   'maternityLeave',
@@ -159,6 +160,14 @@ function reportedSpecialSituationsLines(
         const cred = Math.round(0.35 * Math.max(0, a - 190))
         lines.push(
           `- ${lbl}: תרומות ₪${fmtNis(a)} — זיכוי משוער (35% מסכום מעל ₪190): ₪${fmtNis(cred)}`,
+        )
+        break
+      }
+      case 'lifeInsurancePremiums': {
+        const a = parseAmt(s.details.lifeInsuranceAnnualPaid)
+        const cred = Math.round(Math.min(0.18 * a, 15_000))
+        lines.push(
+          `- ${lbl}: פרמיות ₪${fmtNis(a)} — הטבת מס משוערת בדגם (עד ₪${fmtNis(cred)}): ₪${fmtNis(cred)}`,
         )
         break
       }

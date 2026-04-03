@@ -5,12 +5,14 @@
  * התאמות "מצבים מיוחדים" (הדגמה): קצבאות/עצמאי/חו"ל מוסיפים להכנסה החייבת,
  * נכות 60%+ מפחיתה בסיס חיוב, שכר לימוד ותרומות כזיכוי מהמס המשוער,
  * חופשת לידה — +0.5 נקודות זיכוי לחודש.
+ * פרמיות ביטוח חיים/כושר עבודה — הטבת מס משוערת בדגם (לא ייעוץ).
  */
 export type SpecialSituationsAdjustments = {
   bituachLeumiBenefits?: number
   disabilityPercent?: number
   tuitionPaid?: number
   donationsAmount?: number
+  lifeInsurancePremiumsPaid?: number
   selfEmployedGross?: number
   foreignIncomeAmount?: number
   foreignIncomeCountry?: string
@@ -67,6 +69,9 @@ export function computeRefundNis(
 
   const donations = Math.max(0, s.donationsAmount ?? 0)
   estimatedLiability -= 0.35 * Math.max(0, donations - 190)
+
+  const lifePrem = Math.max(0, s.lifeInsurancePremiumsPaid ?? 0)
+  estimatedLiability -= Math.min(0.18 * lifePrem, 15_000)
 
   estimatedLiability = Math.max(0, estimatedLiability)
 

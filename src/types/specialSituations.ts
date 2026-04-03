@@ -5,6 +5,7 @@ export const SPECIAL_OPTION_KEYS = [
   'disabilityRecognized',
   'academicDegree',
   'charityDonations',
+  'lifeInsurancePremiums',
   'selfEmployedSameYear',
   'foreignIncome',
   'maternityLeave',
@@ -18,6 +19,7 @@ export type SpecialSituationsDetails = {
   disabilityPercent: '' | '20' | '40' | '60' | '80' | '100'
   tuitionPaid: string
   donationsAmount: string
+  lifeInsuranceAnnualPaid: string
   selfEmployedGross: string
   foreignIncomeAmount: string
   foreignIncomeCountry: string
@@ -34,6 +36,7 @@ export const SPECIAL_OPTION_LABELS: Record<SpecialSituationKey, string> = {
   disabilityRecognized: 'יש לי נכות מוכרת',
   academicDegree: 'למדתי לתואר אקדמי',
   charityDonations: 'תרמתי לעמותות מוכרות',
+  lifeInsurancePremiums: 'שילמתי פרמיות ביטוח חיים או אובדן כושר עבודה',
   selfEmployedSameYear: 'עבדתי גם כעצמאי באותה שנה',
   foreignIncome: 'היו לי הכנסות מחו"ל',
   maternityLeave: 'חזרתי מחופשת לידה',
@@ -50,6 +53,7 @@ export function initialSpecialSituationsState(): SpecialSituationsState {
       disabilityPercent: '',
       tuitionPaid: '',
       donationsAmount: '',
+      lifeInsuranceAnnualPaid: '',
       selfEmployedGross: '',
       foreignIncomeAmount: '',
       foreignIncomeCountry: '',
@@ -87,6 +91,7 @@ const ATTACHMENT_HINTS: Partial<
 > = {
   disabilityRecognized: 'אישור נכות ממשרד הבריאות / ביטוח לאומי',
   charityDonations: 'קבלות תרומה מעמותות מוכרות',
+  lifeInsurancePremiums: 'אישור תשלום פרמיות ביטוח / פוליסה',
   academicDegree: 'קבלות שכר לימוד',
   bituachLeumi: 'אישור תשלומים מביטוח לאומי',
   foreignIncome: 'אישור מס ממדינת המקור',
@@ -97,6 +102,7 @@ const ATTACHMENT_HINTS: Partial<
 const ATTACHMENT_HINT_ORDER: Exclude<SpecialSituationKey, 'noneOfAbove'>[] = [
   'disabilityRecognized',
   'charityDonations',
+  'lifeInsurancePremiums',
   'academicDegree',
   'bituachLeumi',
   'foreignIncome',
@@ -127,6 +133,8 @@ export function specialSituationsToAdjustments(s: SpecialSituationsState): Speci
     out.disabilityPercent = Number(details.disabilityPercent)
   if (selected.academicDegree) out.tuitionPaid = n(details.tuitionPaid)
   if (selected.charityDonations) out.donationsAmount = n(details.donationsAmount)
+  if (selected.lifeInsurancePremiums)
+    out.lifeInsurancePremiumsPaid = n(details.lifeInsuranceAnnualPaid)
   if (selected.selfEmployedSameYear) out.selfEmployedGross = n(details.selfEmployedGross)
   if (selected.foreignIncome) {
     out.foreignIncomeAmount = n(details.foreignIncomeAmount)
@@ -175,6 +183,10 @@ export function formatSpecialSituationsForSummary(s: SpecialSituationsState): st
     parts.push(`שכר לימוד לתואר (משוער): ₪${nis(parseN(details.tuitionPaid))}`)
   if (selected.charityDonations)
     parts.push(`תרומות לעמותות (משוער): ₪${nis(parseN(details.donationsAmount))}`)
+  if (selected.lifeInsurancePremiums)
+    parts.push(
+      `פרמיות ביטוח חיים/כושר עבודה (משוער): ₪${nis(parseN(details.lifeInsuranceAnnualPaid))}`,
+    )
   if (selected.selfEmployedSameYear)
     parts.push(`הכנסה כעצמאי ברוטו (משוער): ₪${nis(parseN(details.selfEmployedGross))}`)
   if (selected.foreignIncome) {
@@ -200,6 +212,8 @@ export function validateSpecialFollowUps(s: SpecialSituationsState): SpecialFoll
     e.disabilityPercent = 'נא לבחור אחוז נכות'
   if (selected.academicDegree) reqNum(details.tuitionPaid, 'tuitionPaid')
   if (selected.charityDonations) reqNum(details.donationsAmount, 'donationsAmount')
+  if (selected.lifeInsurancePremiums)
+    reqNum(details.lifeInsuranceAnnualPaid, 'lifeInsuranceAnnualPaid')
   if (selected.selfEmployedSameYear) reqNum(details.selfEmployedGross, 'selfEmployedGross')
   if (selected.foreignIncome) {
     reqNum(details.foreignIncomeAmount, 'foreignIncomeAmount')

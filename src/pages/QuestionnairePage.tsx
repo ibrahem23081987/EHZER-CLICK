@@ -6,6 +6,7 @@ import {
   MARITAL_STATUS_OPTIONS,
   type CriticalAnswers,
   type PersonalDetails,
+  childrenUnder18BandToCount,
   countYesAnswers,
   estimatedRefundRange,
   initialCriticalAnswers,
@@ -54,6 +55,34 @@ const emptyPersonal: PersonalDetails = {
 
 const TOTAL_STEPS = 4
 
+const initialCriticalFollowUps = {
+  exactChildrenCount: '',
+  charityAmountNis: '',
+  lifeInsuranceAmountNis: '',
+}
+
+function mergeSpecialWithCriticalAnswers(
+  a: CriticalAnswers,
+  follow: typeof initialCriticalFollowUps,
+): SpecialSituationsState {
+  let s = initialSpecialSituationsState()
+  if (a.charity === 'yes') {
+    s = setSpecialSelected(s, 'charityDonations', true)
+    s = {
+      ...s,
+      details: { ...s.details, donationsAmount: follow.charityAmountNis.trim() },
+    }
+  }
+  if (a.lifeInsurance === 'yes') {
+    s = setSpecialSelected(s, 'lifeInsurancePremiums', true)
+    s = {
+      ...s,
+      details: { ...s.details, lifeInsuranceAnnualPaid: follow.lifeInsuranceAmountNis.trim() },
+    }
+  }
+  return s
+}
+
 export function QuestionnairePage() {
   const navigate = useNavigate()
   const [step, setStep] = useState(1)
@@ -65,6 +94,8 @@ export function QuestionnairePage() {
   const [specialPhase, setSpecialPhase] = useState<'pick' | 'followup'>('pick')
   const [specialFollowErrors, setSpecialFollowErrors] = useState<SpecialFollowUpErrors>({})
   const [specialPickHint, setSpecialPickHint] = useState(false)
+  const [criticalFollowUps, setCriticalFollowUps] = useState(initialCriticalFollowUps)
+  const [criticalFollowErrors, setCriticalFollowErrors] = useState<Record<string, string>>({})
 
   const progress = useMemo(() => (step / TOTAL_STEPS) * 100, [step])
   const yesCount = countYesAnswers(answers)
@@ -94,13 +125,69 @@ export function QuestionnairePage() {
     return !missing
   }
 
+  function validateCriticalFollowUps(): boolean {
+    const e: Record<string, string> = {}
+    if (answers.childrenUnder18 === 'yes') {
+      const n = parseInt(criticalFollowUps.exactChildrenCount, 10)
+      if (!Number.isFinite(n) || n < 1 || n > 10) {
+        e.exactChildrenCount = 'נא להזין מספר ילדים בין 1 ל־10'
+      }
+    }
+    if (answers.charity === 'yes') {
+      const v = parseFloat(criticalFollowUps.charityAmountNis.replace(/[,₪\s]/g, ''))
+      if (!Number.isFinite(v) || v <= 0) {
+        e.charityAmountNis = 'נא להזין סכום תרומות בשקלים'
+      }
+    }
+    if (answers.lifeInsurance === 'yes') {
+      const v = parseFloat(criticalFollowUps.lifeInsuranceAmountNis.replace(/[,₪\s]/g, ''))
+      if (!Number.isFinite(v) || v <= 0) {
+        e.lifeInsuranceAmountNis = 'נא להזין סכום פרמיות בשקלים'
+      }
+    }
+    setCriticalFollowErrors(e)
+    return Object.keys(e).length === 0
+  }
+
+  function childrenCountForUpload(): number {
+    if (answers.childrenUnder18 === 'yes') {
+      const n = parseInt(criticalFollowUps.exactChildrenCount, 10)
+      if (Number.isFinite(n) && n >= 1 && n <= 10) return n
+    }
+    return childrenUnder18BandToCount(personal.childrenUnder18Count)
+  }
+
+  /** מצרף תרומות/ביטוח מהשאלון הקריטי גם אם בשלב 3 נבחר ״לא אף אחד מהנ״ל״ */
+  function composeSpecialForUpload(): SpecialSituationsState {
+    let base: SpecialSituationsState = {
+      selected: { ...special.selected },
+      details: { ...special.details },
+    }
+    if (answers.charity === 'yes') {
+      base = setSpecialSelected(base, 'charityDonations', true)
+      base = {
+        ...base,
+        details: { ...base.details, donationsAmount: criticalFollowUps.charityAmountNis.trim() },
+      }
+    }
+    if (answers.lifeInsurance === 'yes') {
+      base = setSpecialSelected(base, 'lifeInsurancePremiums', true)
+      base = {
+        ...base,
+        details: { ...base.details, lifeInsuranceAnnualPaid: criticalFollowUps.lifeInsuranceAmountNis.trim() },
+      }
+    }
+    return base
+  }
+
   function uploadStateBase() {
     return {
       personal,
       yesCount,
       estimatedRange: range,
       annualIncome: answers.annualIncome,
-      specialSituations: special,
+      specialSituations: composeSpecialForUpload(),
+      childrenCountForRefund: childrenCountForUpload(),
     }
   }
 
@@ -113,7 +200,12 @@ export function QuestionnairePage() {
         setShowCriticalHint(true)
         return
       }
-      setSpecial(initialSpecialSituationsState())
+      if (!validateCriticalFollowUps()) {
+        setShowCriticalHint(true)
+        return
+      }
+      setShowCriticalHint(false)
+      setSpecial(mergeSpecialWithCriticalAnswers(answers, criticalFollowUps))
       setSpecialPhase('pick')
       setSpecialFollowErrors({})
       setSpecialPickHint(false)
@@ -344,7 +436,18 @@ export function QuestionnairePage() {
                   <div className="mt-3 flex flex-wrap gap-3">
                     <button
                       type="button"
-                      onClick={() => setAnswers((a) => ({ ...a, [key]: 'yes' }))}
+                      onClick={() => {
+                        setAnswers((a) => ({ ...a, [key]: 'yes' }))
+                        if (key === 'charity' || key === 'lifeInsurance' || key === 'childrenUnder18') {
+                          setCriticalFollowErrors((er) => {
+                            const n = { ...er }
+                            if (key === 'charity') delete n.charityAmountNis
+                            if (key === 'lifeInsurance') delete n.lifeInsuranceAmountNis
+                            if (key === 'childrenUnder18') delete n.exactChildrenCount
+                            return n
+                          })
+                        }
+                      }}
                       className={`min-h-14 min-w-[7rem] flex-1 rounded-xl border-2 px-6 py-4 text-base font-bold transition sm:flex-none sm:min-w-[8rem] ${
                         answers[key] === 'yes'
                           ? 'border-gold bg-gold-muted text-navy ring-2 ring-gold/50'
@@ -355,7 +458,33 @@ export function QuestionnairePage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setAnswers((a) => ({ ...a, [key]: 'no' }))}
+                      onClick={() => {
+                        setAnswers((a) => ({ ...a, [key]: 'no' }))
+                        if (key === 'childrenUnder18') {
+                          setCriticalFollowUps((f) => ({ ...f, exactChildrenCount: '' }))
+                          setCriticalFollowErrors((er) => {
+                            const n = { ...er }
+                            delete n.exactChildrenCount
+                            return n
+                          })
+                        }
+                        if (key === 'charity') {
+                          setCriticalFollowUps((f) => ({ ...f, charityAmountNis: '' }))
+                          setCriticalFollowErrors((er) => {
+                            const n = { ...er }
+                            delete n.charityAmountNis
+                            return n
+                          })
+                        }
+                        if (key === 'lifeInsurance') {
+                          setCriticalFollowUps((f) => ({ ...f, lifeInsuranceAmountNis: '' }))
+                          setCriticalFollowErrors((er) => {
+                            const n = { ...er }
+                            delete n.lifeInsuranceAmountNis
+                            return n
+                          })
+                        }
+                      }}
                       className={`min-h-14 min-w-[7rem] flex-1 rounded-xl border-2 px-6 py-4 text-base font-bold transition sm:flex-none sm:min-w-[8rem] ${
                         answers[key] === 'no'
                           ? 'border-navy bg-navy text-white ring-2 ring-navy/30'
@@ -365,12 +494,84 @@ export function QuestionnairePage() {
                       לא
                     </button>
                   </div>
+                  {key === 'multiEmployer' && answers.multiEmployer === 'yes' && (
+                    <p
+                      className="mt-4 rounded-xl border border-gold/35 bg-gold-muted/50 px-4 py-3 text-sm leading-relaxed text-navy"
+                      role="note"
+                    >
+                      תצטרך להעלות טופס 106 נפרד לכל מעסיק בשלב הבא
+                    </p>
+                  )}
+                  {key === 'childrenUnder18' && answers.childrenUnder18 === 'yes' && (
+                    <div className="mt-4">
+                      <label className="mb-1.5 block text-sm font-semibold text-navy">כמה ילדים?</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={10}
+                        inputMode="numeric"
+                        value={criticalFollowUps.exactChildrenCount}
+                        onChange={(e) => {
+                          const raw = e.target.value.replace(/\D/g, '').slice(0, 2)
+                          setCriticalFollowUps((f) => ({ ...f, exactChildrenCount: raw }))
+                          setCriticalFollowErrors((er) => {
+                            const n = { ...er }
+                            delete n.exactChildrenCount
+                            return n
+                          })
+                        }}
+                        className="w-full max-w-[12rem] rounded-xl border border-navy/15 bg-white px-4 py-3 text-navy shadow-sm outline-none ring-gold/40 focus:border-gold focus:ring-2"
+                      />
+                      {criticalFollowErrors.exactChildrenCount && (
+                        <p className="mt-1 text-sm text-red-600">{criticalFollowErrors.exactChildrenCount}</p>
+                      )}
+                    </div>
+                  )}
+                  {key === 'charity' && answers.charity === 'yes' && (
+                    <div className="mt-4">
+                      <Field
+                        label="כמה תרמת השנה? (₪)"
+                        value={criticalFollowUps.charityAmountNis}
+                        onChange={(v) => {
+                          setCriticalFollowUps((f) => ({ ...f, charityAmountNis: v }))
+                          setCriticalFollowErrors((er) => {
+                            const n = { ...er }
+                            delete n.charityAmountNis
+                            return n
+                          })
+                        }}
+                        inputMode="decimal"
+                        error={criticalFollowErrors.charityAmountNis}
+                      />
+                    </div>
+                  )}
+                  {key === 'lifeInsurance' && answers.lifeInsurance === 'yes' && (
+                    <div className="mt-4">
+                      <Field
+                        label="כמה שילמת בשנה? (₪)"
+                        value={criticalFollowUps.lifeInsuranceAmountNis}
+                        onChange={(v) => {
+                          setCriticalFollowUps((f) => ({ ...f, lifeInsuranceAmountNis: v }))
+                          setCriticalFollowErrors((er) => {
+                            const n = { ...er }
+                            delete n.lifeInsuranceAmountNis
+                            return n
+                          })
+                        }}
+                        inputMode="decimal"
+                        error={criticalFollowErrors.lifeInsuranceAmountNis}
+                      />
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>
-            {showCriticalHint && !validateCritical() && (
-              <p className="mt-6 text-sm text-amber-700">נא לענות על כל השאלות לפני המשך</p>
-            )}
+            {showCriticalHint &&
+              (!validateCritical() || Object.keys(criticalFollowErrors).length > 0) && (
+                <p className="mt-6 text-sm text-amber-700">
+                  נא לענות על כל השאלות ולמלא את השדות הנלווים לפני המשך
+                </p>
+              )}
           </div>
         </section>
       )}
@@ -490,6 +691,22 @@ export function QuestionnairePage() {
                   }}
                   inputMode="decimal"
                   error={specialFollowErrors.donationsAmount}
+                />
+              )}
+              {special.selected.lifeInsurancePremiums && (
+                <Field
+                  label="כמה שילמת בפרמיות ביטוח חיים / כושר עבודה? (בשקלים)"
+                  value={special.details.lifeInsuranceAnnualPaid}
+                  onChange={(v) => {
+                    setSpecial((p) => ({ ...p, details: { ...p.details, lifeInsuranceAnnualPaid: v } }))
+                    setSpecialFollowErrors((e) => {
+                      const n = { ...e }
+                      delete n.lifeInsuranceAnnualPaid
+                      return n
+                    })
+                  }}
+                  inputMode="decimal"
+                  error={specialFollowErrors.lifeInsuranceAnnualPaid}
                 />
               )}
               {special.selected.selfEmployedSameYear && (
