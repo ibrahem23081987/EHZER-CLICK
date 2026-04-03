@@ -13,10 +13,27 @@ export function Layout() {
             className="group flex shrink-0 items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-navy"
             aria-label="החזר קליק"
           >
-            <span style={{ fontWeight: 'bold', fontSize: '1.3rem' }}>
-              <span style={{ color: '#f8fafc' }}>החזר</span>
-              <span style={{ color: '#c9a84c' }}> קליק</span>
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div
+                style={{
+                  background: '#c9a84c',
+                  borderRadius: '8px',
+                  width: '32px',
+                  height: '32px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '18px',
+                }}
+                aria-hidden
+              >
+                ₪
+              </div>
+              <span style={{ fontWeight: '800', fontSize: '1.4rem', letterSpacing: '-0.5px' }}>
+                <span style={{ color: '#f8fafc' }}>החזר</span>
+                <span style={{ color: '#c9a84c' }}> קליק</span>
+              </span>
+            </div>
           </Link>
           <nav className="flex items-center gap-2 sm:gap-4" aria-label="ניווט ראשי">
             <Link
