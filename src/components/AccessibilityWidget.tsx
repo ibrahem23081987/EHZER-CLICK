@@ -27,23 +27,29 @@ function applyToDocument(fontStep: number, highContrast: boolean, underlineLinks
   root.toggleAttribute('data-a11y-links-underline', underlineLinks)
 }
 
+function loadFontStep(): number {
+  const f = parseInt(readLs(LS_FONT) ?? '0', 10)
+  return Number.isFinite(f) ? Math.max(0, Math.min(3, f)) : 0
+}
+
+function loadContrast(): boolean {
+  return readLs(LS_CONTRAST) === '1'
+}
+
+function loadUnderline(): boolean {
+  return readLs(LS_UNDERLINE) === '1'
+}
+
 export function AccessibilityWidget() {
   const panelId = useId()
   const [open, setOpen] = useState(false)
-  const [fontStep, setFontStep] = useState(0)
-  const [highContrast, setHighContrast] = useState(false)
-  const [underlineLinks, setUnderlineLinks] = useState(false)
+  const [fontStep, setFontStep] = useState(loadFontStep)
+  const [highContrast, setHighContrast] = useState(loadContrast)
+  const [underlineLinks, setUnderlineLinks] = useState(loadUnderline)
 
   useEffect(() => {
-    const f = parseInt(readLs(LS_FONT) ?? '0', 10)
-    const c = readLs(LS_CONTRAST) === '1'
-    const u = readLs(LS_UNDERLINE) === '1'
-    const fs = Number.isFinite(f) ? Math.max(0, Math.min(3, f)) : 0
-    setFontStep(fs)
-    setHighContrast(c)
-    setUnderlineLinks(u)
-    applyToDocument(fs, c, u)
-  }, [])
+    applyToDocument(fontStep, highContrast, underlineLinks)
+  }, [fontStep, highContrast, underlineLinks])
 
   const persist = useCallback((fs: number, hc: boolean, ul: boolean) => {
     writeLs(LS_FONT, String(fs))
