@@ -63,12 +63,27 @@ function mediaBlockForFile(file: File, base64: string): Record<string, unknown> 
   }
 }
 
-function parseExtractedJson(text: string): Extracted106 {
+/** Error code thrown when the model decides the upload is not a valid טופס 106 */
+export const CLAUDE_NOT_FORM_106_CODE = 'claude_not_form_106'
+
+/** User-facing Hebrew message for invalid non-106 uploads */
+export const CLAUDE_NOT_FORM_106_MESSAGE_HE =
+  'הקובץ שהעלית אינו טופס 106 תקין. אנא העלה את טופס 106 שקיבלת מהמעסיק שלך.'
+
+function parse106ModelResponse(text: string): Extracted106 {
   let t = text.trim()
   const fence = /^```(?:json)?\s*([\s\S]*?)```$/m.exec(t)
   if (fence) t = fence[1].trim()
 
   const obj = JSON.parse(t) as Record<string, unknown>
+  const valid = obj.validForm106
+  if (valid === false) {
+    throw new Error(CLAUDE_NOT_FORM_106_CODE)
+  }
+  if (valid !== true) {
+    throw new Error('claude_invalid_response_shape')
+  }
+
   const num = (v: unknown): number | null => {
     if (v == null) return null
     if (typeof v === 'number' && Number.isFinite(v)) return v
@@ -86,17 +101,31 @@ function parseExtractedJson(text: string): Extracted106 {
   }
 }
 
-const EXTRACTION_PROMPT = `You are reading an Israeli employee annual tax summary form (טופס / טופס 106).
+const EXTRACTION_PROMPT = `You analyze uploaded documents for an Israeli tax refund service.
 
-Extract ONLY these fields as numbers in NIS (no symbols in JSON values):
-- grossSalary: total annual employment / שכר ברוטו שנתי (or main employment income total from the form)
-- taxWithheld: total income tax withheld at source / מס הכנסה שנוכה במקור (annual)
-- creditPoints: נקודות זיכוי if explicitly shown as a count (e.g. 2.25). If not visible, use null.
+STEP 1 — VALIDATION
+Decide whether the document is a genuine Israeli employer annual tax summary for employees: טופס 106 (שכיר).
+It should look like the standard form from an employer or payroll with typical Hebrew labels such as טופס 106, שכר, ניכוי מס במקור, מס הכנסה, נקודות זיכוי, שנת מס, פרטי מעסיק, and annual employment income summaries.
 
-If a value cannot be determined, use null for that field.
+Set validForm106 to false if ANY of these apply:
+- The file is not a טופס 106 (e.g. invoice, contract, bank statement, foreign tax form, random letter, screenshot without form structure, another נוסח entirely).
+- The image/PDF is illegible, blank, or too incomplete to identify as טופס 106.
+- You are not confident it is the Israeli employee טופס 106 from an employer.
 
-Return ONLY valid JSON with this exact shape (no markdown):
-{"grossSalary":number|null,"taxWithheld":number|null,"creditPoints":number|null}`
+STEP 2 — EXTRACTION (only if validForm106 is true)
+Extract ONLY these fields as numbers in NIS (no currency symbols in JSON values):
+- grossSalary: total annual employment gross / שכר ברוטו שנתי (main employment total from the form)
+- taxWithheld: total income tax withheld at source for the year / מס הכנסה שנוכה במקור (annual)
+- creditPoints: נקודות זיכוי if explicitly shown (e.g. 2.25). If not visible, null.
+
+If a numeric value cannot be determined, use null for that field.
+
+OUTPUT (return ONLY valid JSON, no markdown, no extra text):
+If the document is NOT a valid טופס 106:
+{"validForm106":false}
+
+If it IS a valid טופס 106:
+{"validForm106":true,"grossSalary":number|null,"taxWithheld":number|null,"creditPoints":number|null}`
 
 export async function analyzeForm106WithClaude(
   file: File,
@@ -155,7 +184,7 @@ export async function analyzeForm106WithClaude(
   const text = textBlock?.text
   if (!text) throw new Error('claude_no_text')
 
-  const extracted = parseExtractedJson(text)
+  const extracted = parse106ModelResponse(text)
   const gross = extracted.grossSalary ?? 0
   const withheld = extracted.taxWithheld ?? 0
 

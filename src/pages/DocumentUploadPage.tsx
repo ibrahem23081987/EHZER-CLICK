@@ -16,7 +16,12 @@ import { FileDropzone } from '../components/FileDropzone'
 import { IconLock } from '../components/icons'
 import { SecurityNote } from '../components/SecurityNote'
 import { Badge } from '../components/Badge'
-import { analyzeForm106WithClaude, type Analyze106Result } from '../services/claude106'
+import {
+  analyzeForm106WithClaude,
+  CLAUDE_NOT_FORM_106_CODE,
+  CLAUDE_NOT_FORM_106_MESSAGE_HE,
+  type Analyze106Result,
+} from '../services/claude106'
 import { generateRefundSummaryHebrew } from '../services/claudeRefundSummary'
 import { downloadRefundSummaryPdf } from '../utils/refundSummaryPdf'
 
@@ -31,8 +36,11 @@ export type UploadLocationState = {
 
 function formatError(e: unknown): string {
   const msg = e instanceof Error ? e.message : String(e)
+  if (msg === CLAUDE_NOT_FORM_106_CODE) return CLAUDE_NOT_FORM_106_MESSAGE_HE
   if (msg === 'claude_insufficient_numbers')
     return 'לא הצלחנו לזהות ברוטו או נתוני מס מספיקים בטופס. ודא שהקובץ קריא או נסה קובץ אחר.'
+  if (msg === 'claude_invalid_response_shape')
+    return 'תשובת הניתוח אינה תקינה. נסה שוב או העלה קובץ אחר.'
   if (msg.startsWith('claude_http_'))
     return 'שגיאה בשירות הניתוח. בדוק שהוגדר ANTHROPIC_API_KEY בקובץ .env ושהפרוקסי פעיל (npm run dev).'
   if (msg === 'claude_no_text') return 'המודל לא החזיר תוצאה. נסה שוב.'
