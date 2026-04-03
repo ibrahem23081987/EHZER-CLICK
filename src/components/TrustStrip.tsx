@@ -3,7 +3,7 @@ import { IconShield } from './icons'
 const items = [
   'מאובטח SSL',
   'בדיקה והכנה בחינם',
-  'רואה חשבון מוסמך',
+  'ליווי מקצועי',
 ] as const
 
 export function TrustStrip() {
