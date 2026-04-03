@@ -8,11 +8,15 @@ export function Layout() {
       <header className="sticky top-0 z-50 border-b border-navy/10 bg-navy shadow-md">
         <TrustStrip />
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4">
-          <Link to="/" className="group flex flex-col items-start gap-0.5">
-            <span className="text-lg font-bold tracking-tight text-white sm:text-xl">
-              החזר מס מקצועי
-            </span>
-            <span className="text-xs font-medium text-gold">משרד רואה חשבון</span>
+          <Link to="/" className="group flex shrink-0 items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-navy">
+            <img
+              src="/logo.svg"
+              alt="החזר קליק"
+              className="h-8 w-auto sm:h-9"
+              width={180}
+              height={31}
+              decoding="async"
+            />
           </Link>
           <nav className="flex items-center gap-2 sm:gap-4" aria-label="ניווט ראשי">
             <Link
