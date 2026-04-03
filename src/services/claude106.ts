@@ -127,33 +127,60 @@ If the document is NOT a valid טופס 106:
 If it IS a valid טופס 106:
 {"validForm106":true,"grossSalary":number|null,"taxWithheld":number|null,"creditPoints":number|null}`
 
-export async function analyzeForm106WithClaude(
-  file: File,
-  context?: Analyze106Context,
-): Promise<Analyze106Result> {
+/** Same tax year, multiple employers: sum ברוטו וניכוי במקור; נקודות זיכוי — לרוב זהות בין טפסים, לוקחים את המקסימום אם יש כמה ערכים */
+function mergeExtracted106FromEmployers(parts: Extracted106[]): Extracted106 {
+  if (parts.length === 0) {
+    return { grossSalary: null, taxWithheld: null, creditPoints: null }
+  }
+  const grossSum = parts.reduce((s, p) => s + (p.grossSalary ?? 0), 0)
+  const withheldSum = parts.reduce((s, p) => s + (p.taxWithheld ?? 0), 0)
+  const creditValues = parts
+    .map((p) => p.creditPoints)
+    .filter((v): v is number => v != null && Number.isFinite(v))
+  const creditPoints = creditValues.length === 0 ? null : Math.max(...creditValues)
+  return {
+    grossSalary: grossSum > 0 ? grossSum : null,
+    taxWithheld: withheldSum > 0 ? withheldSum : null,
+    creditPoints,
+  }
+}
+
+function finalize106Analysis(extracted: Extracted106, context?: Analyze106Context): Analyze106Result {
   const maritalStatus = context?.maritalStatus ?? 'single'
   const childrenCount = context?.childrenCount ?? 0
   const specialAdjustments = context?.specialAdjustments
 
+  const gross = extracted.grossSalary ?? 0
+  const withheld = extracted.taxWithheld ?? 0
+
+  if (gross <= 0) {
+    throw new Error('claude_insufficient_numbers')
+  }
+
+  const refundNis = computeRefundNis(
+    gross,
+    withheld,
+    extracted.creditPoints,
+    maritalStatus,
+    childrenCount,
+    specialAdjustments,
+  )
+
+  return { ...extracted, refundNis }
+}
+
+async function extract106FromFile(
+  file: File,
+  options?: { demoEmployerIndex?: number },
+): Promise<Extracted106> {
+  const demoIdx = options?.demoEmployerIndex
+
   if (CLAUDE_DEMO_MODE) {
-    await new Promise((resolve) => setTimeout(resolve, 3000))
-    const gross = 120000
-    const withheld = 18000
-    const creditPoints = 2.25
-    const refundNis = computeRefundNis(
-      gross,
-      withheld,
-      creditPoints,
-      maritalStatus,
-      childrenCount,
-      specialAdjustments,
-    )
-    return {
-      grossSalary: gross,
-      taxWithheld: withheld,
-      creditPoints,
-      refundNis,
+    await new Promise((resolve) => setTimeout(resolve, demoIdx !== undefined ? 1800 : 3000))
+    if (demoIdx === 1) {
+      return { grossSalary: 95000, taxWithheld: 12000, creditPoints: 2.25 }
     }
+    return { grossSalary: 120000, taxWithheld: 18000, creditPoints: 2.25 }
   }
 
   const model = import.meta.env.VITE_ANTHROPIC_MODEL || DEFAULT_MODEL
@@ -184,22 +211,38 @@ export async function analyzeForm106WithClaude(
   const text = textBlock?.text
   if (!text) throw new Error('claude_no_text')
 
-  const extracted = parse106ModelResponse(text)
-  const gross = extracted.grossSalary ?? 0
-  const withheld = extracted.taxWithheld ?? 0
+  return parse106ModelResponse(text)
+}
 
-  if (gross <= 0) {
-    throw new Error('claude_insufficient_numbers')
+/**
+ * ניתוח אחד או שני טפסי 106 (מעסיקים שונים): קריאות API מקבילות ואיחוד ברוטו + ניכוי במקור.
+ */
+export async function analyzeForm106FilesWithClaude(
+  files: File[],
+  context?: Analyze106Context,
+): Promise<Analyze106Result> {
+  if (files.length === 0) {
+    throw new Error('no_106_files')
+  }
+  if (files.length > 2) {
+    throw new Error('too_many_106_files')
   }
 
-  const refundNis = computeRefundNis(
-    gross,
-    withheld,
-    extracted.creditPoints,
-    maritalStatus,
-    childrenCount,
-    specialAdjustments,
+  const useDemoSplit = CLAUDE_DEMO_MODE && files.length > 1
+
+  const extracts = await Promise.all(
+    files.map((f, i) =>
+      extract106FromFile(f, useDemoSplit ? { demoEmployerIndex: i } : undefined),
+    ),
   )
 
-  return { ...extracted, refundNis }
+  const merged = mergeExtracted106FromEmployers(extracts)
+  return finalize106Analysis(merged, context)
+}
+
+export async function analyzeForm106WithClaude(
+  file: File,
+  context?: Analyze106Context,
+): Promise<Analyze106Result> {
+  return analyzeForm106FilesWithClaude([file], context)
 }

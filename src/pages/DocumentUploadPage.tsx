@@ -13,11 +13,11 @@ import {
   type SpecialSituationsState,
 } from '../types/specialSituations'
 import { FileDropzone } from '../components/FileDropzone'
-import { IconLock } from '../components/icons'
+import { IconLock, IconX } from '../components/icons'
 import { SecurityNote } from '../components/SecurityNote'
 import { Badge } from '../components/Badge'
 import {
-  analyzeForm106WithClaude,
+  analyzeForm106FilesWithClaude,
   CLAUDE_NOT_FORM_106_CODE,
   CLAUDE_NOT_FORM_106_MESSAGE_HE,
   type Analyze106Result,
@@ -56,6 +56,8 @@ export function DocumentUploadPage() {
   const state = (location.state as UploadLocationState | null) ?? {}
 
   const [form106, setForm106] = useState<File | null>(null)
+  const [showSecond106, setShowSecond106] = useState(false)
+  const [form106Second, setForm106Second] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<Analyze106Result | null>(null)
@@ -73,12 +75,17 @@ export function DocumentUploadPage() {
       setError('יש להעלות טופס 106')
       return
     }
+    if (showSecond106 && !form106Second) {
+      setError('יש להעלות גם את טופס 106 של המעסיק השני, או להסיר את השדה הנוסף')
+      return
+    }
     setLoading(true)
     try {
       const specialAdj = state.specialSituations
         ? specialSituationsToAdjustments(state.specialSituations)
         : undefined
-      const r = await analyzeForm106WithClaude(form106, {
+      const files = showSecond106 && form106Second ? [form106, form106Second] : [form106]
+      const r = await analyzeForm106FilesWithClaude(files, {
         maritalStatus: state.personal?.maritalStatus ?? 'single',
         childrenCount: childrenUnder18BandToCount(state.personal?.childrenUnder18Count),
         specialAdjustments: specialAdj && Object.keys(specialAdj).length > 0 ? specialAdj : undefined,
@@ -250,6 +257,39 @@ export function DocumentUploadPage() {
           />
         </div>
 
+        {!showSecond106 && (
+          <button
+            type="button"
+            onClick={() => setShowSecond106(true)}
+            className="mt-4 w-full rounded-xl border-2 border-navy/20 bg-white px-4 py-3 text-sm font-semibold text-navy transition hover:bg-navy/5"
+          >
+            + הוסף טופס 106 נוסף (עבדתי אצל יותר ממעסיק אחד)
+          </button>
+        )}
+
+        {showSecond106 && (
+          <div className="relative mt-6 rounded-2xl border border-navy/15 bg-slate-50/80 p-4 pt-10 ring-1 ring-navy/10 sm:p-5 sm:pt-11">
+            <button
+              type="button"
+              onClick={() => {
+                setShowSecond106(false)
+                setForm106Second(null)
+              }}
+              className="absolute start-3 top-3 inline-flex items-center justify-center rounded-lg p-2 text-navy/60 transition hover:bg-navy/10 hover:text-navy"
+              aria-label="הסר טופס מעסיק נוסף"
+            >
+              <IconX className="h-5 w-5" />
+            </button>
+            <FileDropzone
+              label="טופס 106 — מעסיק נוסף"
+              description="PDF או תמונה (JPG / PNG) — קובץ קריא"
+              required
+              value={form106Second}
+              onChange={setForm106Second}
+            />
+          </div>
+        )}
+
         {loading && (
           <div
             className="mt-8 flex flex-col items-center gap-4 rounded-2xl border border-gold/30 bg-gold-muted/50 py-10"
@@ -258,7 +298,9 @@ export function DocumentUploadPage() {
           >
             <div className="h-10 w-10 animate-spin rounded-full border-4 border-navy/20 border-t-gold" />
             <p className="max-w-sm text-center text-sm font-medium text-navy">
-              הבינה המלאכותית מנתחת את הטופס שלך...
+              {showSecond106 && form106Second
+                ? 'הבינה המלאכותית מנתחת את שני הטפסים...'
+                : 'הבינה המלאכותית מנתחת את הטופס שלך...'}
             </p>
           </div>
         )}
