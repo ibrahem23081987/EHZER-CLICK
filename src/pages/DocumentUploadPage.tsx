@@ -42,7 +42,7 @@ function formatError(e: unknown): string {
   if (msg === 'claude_invalid_response_shape')
     return 'תשובת הניתוח אינה תקינה. נסה שוב או העלה קובץ אחר.'
   if (msg.startsWith('claude_http_'))
-    return 'שגיאה בשירות הניתוח. בדוק שהוגדר ANTHROPIC_API_KEY בקובץ .env ושהפרוקסי פעיל (npm run dev).'
+    return 'שגיאה בשירות הניתוח. נסה שוב בעוד כמה דקות.'
   if (msg === 'claude_no_text') return 'המודל לא החזיר תוצאה. נסה שוב.'
   if (msg === 'read_failed') return 'שגיאה בקריאת הקובץ.'
   if (msg.includes('JSON')) return 'לא ניתן לפרש את תשובת המודל. נסה שוב.'
@@ -238,9 +238,7 @@ export function DocumentUploadPage() {
           <IconLock className="h-5 w-5 text-gold" aria-hidden />
           טופס 106
         </h2>
-        <p className="mt-2 text-xs leading-relaxed text-navy/60">
-          הקובץ נשלח לניתוח מאובטח. בפיתוח מקומי נדרש מפתח API בקובץ .env (ראה הערות בקוד הפרויקט).
-        </p>
+        <p className="mt-2 text-xs leading-relaxed text-navy/60">הקובץ נשלח לניתוח מאובטח.</p>
 
         <div className="mt-8">
           <FileDropzone
