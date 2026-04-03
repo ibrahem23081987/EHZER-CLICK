@@ -5,8 +5,8 @@ import { SecurityNote } from '../components/SecurityNote'
 
 const trustCards = [
   {
-    title: 'חינם לבדיקה',
-    text: 'בדיקת זכאות והכנת התיק בחינם — ללא התחייבות.',
+    title: 'חינם לחישוב',
+    text: 'הערכת זכאות והחזר משוער מהנתונים שלך — בלי עלות ובלי התחייבות.',
     icon: IconCheck,
   },
   {
@@ -15,8 +15,8 @@ const trustCards = [
     icon: IconShield,
   },
   {
-    title: 'ללא מקדמה',
-    text: 'מי שלא יודע להגיש יכול להעביר אלינו — תשלום עמלה רק אחרי קבלת ההחזר, לפי הסכם.',
+    title: 'מהיר ופשוט',
+    text: 'שאלון קצר, העלאת טופס 106 ותוצאה תוך זמן קצר — הכול מתוך המחשבון.',
     icon: IconLock,
   },
 ] as const
@@ -55,7 +55,7 @@ export function HomePage() {
           <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
             <Badge variant="gold">SSL מאובטח</Badge>
             <Badge variant="muted" className="!bg-white/10 !text-white !ring-white/20">
-              בדיקה והכנה בחינם
+              חישוב חינם
             </Badge>
             <Badge variant="muted" className="!bg-white/10 !text-white !ring-white/20">
               ללא תשלום
@@ -83,9 +83,9 @@ export function HomePage() {
       </section>
 
       <section className="mx-auto max-w-5xl px-4 py-14 sm:py-16">
-        <h2 className="text-center text-2xl font-bold text-navy sm:text-3xl">למה לבחור בנו</h2>
+        <h2 className="text-center text-2xl font-bold text-navy sm:text-3xl">למה המחשבון</h2>
         <p className="mx-auto mt-2 max-w-xl text-center text-navy/70">
-          שלושה עקרונות שמנחים כל לקוח
+          שלושה עקרונות פשוטים
         </p>
         <div className="mt-10 grid gap-6 sm:grid-cols-3">
           {trustCards.map(({ title, text, icon: Icon }) => (
@@ -135,13 +135,13 @@ export function HomePage() {
       <section className="mx-auto max-w-5xl px-4 py-14 sm:py-16">
         <h2 className="text-center text-2xl font-bold text-navy sm:text-3xl">מה לקוחות אומרים</h2>
         <p className="mx-auto mt-2 text-center text-sm text-navy/60">
-          חוויות אמיתיות מלקוחות שקיבלו ליווי בהחזר מס
+          חוויות משתמשים שחישבו את ההחזר דרך האתר
         </p>
         <div className="mt-10 grid gap-6 md:grid-cols-3">
           {[
             {
               name: 'נועה כהן, תל אביב',
-              text: 'חשבתי שלא מגיע לי כלום, ובסוף יצא שכן — ההסבר היה ברור והתהליך הרגיש מקצועי מראש ועד סוף.',
+              text: 'חשבתי שלא מגיע לי כלום, ובסוף יצא שכן — ההסבר במסך היה ברור והחישוב פשוט מראש ועד סוף.',
             },
             {
               name: 'יוסי אביב, חיפה',
@@ -149,7 +149,7 @@ export function HomePage() {
             },
             {
               name: 'מיכל גרציה, באר שבע',
-              text: 'שירות אנושי, בלי טריקים. עזרו לי לארגן את טופס 106 ולהבין מה באמת מגיע לי — ממליצה בלב שלם.',
+              text: 'בלי טריקים ובלי סיבוכים. העליתי את טופס 106 והמחשבון הראה לי בדיוק מה מגיע לי — ממליצה בלב שלם.',
             },
           ].map((t) => (
             <blockquote

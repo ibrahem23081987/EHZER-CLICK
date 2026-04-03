@@ -1,10 +1,6 @@
 import { IconShield } from './icons'
 
-const items = [
-  'מאובטח SSL',
-  'בדיקה והכנה בחינם',
-  'ליווי מקצועי',
-] as const
+const items = ['מאובטח SSL', 'חישוב חינם'] as const
 
 export function TrustStrip() {
   return (
