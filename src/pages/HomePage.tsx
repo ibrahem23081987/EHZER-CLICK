@@ -5,8 +5,8 @@ import { SecurityNote } from '../components/SecurityNote'
 
 const trustCards = [
   {
-    title: 'חינם לחישוב',
-    text: 'הערכת זכאות והחזר משוער מהנתונים שלך — בלי עלות ובלי התחייבות.',
+    title: 'חינם לחלוטין',
+    text: 'המחשבון חינמי לגמרי — אין צורך בהרשמה או תשלום.',
     icon: IconCheck,
   },
   {
@@ -15,8 +15,8 @@ const trustCards = [
     icon: IconShield,
   },
   {
-    title: 'מהיר ופשוט',
-    text: 'שאלון קצר, העלאת טופס 106 ותוצאה תוך זמן קצר — הכול מתוך המחשבון.',
+    title: 'תוצאה מיידית',
+    text: 'תוך שניות תדע אם מגיע לך החזר מס ובכמה.',
     icon: IconLock,
   },
 ] as const
