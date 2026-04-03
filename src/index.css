@@ -23,3 +23,23 @@ body {
 #root {
   min-height: 100dvh;
 }
+
+/* נגישות — מופעל ע״י AccessibilityWidget */
+html[data-a11y-font='1'] {
+  font-size: 106.25%;
+}
+html[data-a11y-font='2'] {
+  font-size: 112.5%;
+}
+html[data-a11y-font='3'] {
+  font-size: 125%;
+}
+
+html[data-a11y-contrast-high] #root {
+  filter: contrast(1.22) brightness(1.03);
+}
+
+html[data-a11y-links-underline] a {
+  text-decoration: underline !important;
+  text-underline-offset: 3px;
+}

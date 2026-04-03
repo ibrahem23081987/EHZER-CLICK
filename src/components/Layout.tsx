@@ -1,4 +1,5 @@
 import { Link, Outlet } from 'react-router-dom'
+import { AccessibilityWidget } from './AccessibilityWidget'
 import { TrustStrip } from './TrustStrip'
 import { Footer } from './Footer'
 
@@ -55,6 +56,7 @@ export function Layout() {
         <Outlet />
       </main>
       <Footer />
+      <AccessibilityWidget />
     </div>
   )
 }

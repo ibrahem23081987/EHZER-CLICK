@@ -5,6 +5,8 @@ import { QuestionnairePage } from './pages/QuestionnairePage'
 import { DocumentUploadPage } from './pages/DocumentUploadPage'
 import { ThankYouPage } from './pages/ThankYouPage'
 import { HandoffPage } from './pages/HandoffPage'
+import { PrivacyPage } from './pages/PrivacyPage'
+import { AccessibilityPage } from './pages/AccessibilityPage'
 
 export default function App() {
   return (
@@ -16,6 +18,8 @@ export default function App() {
           <Route path="upload" element={<DocumentUploadPage />} />
           <Route path="handoff" element={<HandoffPage />} />
           <Route path="thank-you" element={<ThankYouPage />} />
+          <Route path="privacy" element={<PrivacyPage />} />
+          <Route path="accessibility" element={<AccessibilityPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

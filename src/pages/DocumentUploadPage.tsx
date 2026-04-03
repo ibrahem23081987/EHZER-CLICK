@@ -73,6 +73,7 @@ export function DocumentUploadPage() {
   const [result, setResult] = useState<Analyze106Result | null>(null)
   const [summaryLoading, setSummaryLoading] = useState(false)
   const [summaryError, setSummaryError] = useState<string | null>(null)
+  const [privacyConsent, setPrivacyConsent] = useState(false)
 
   const firstName = state.personal?.firstName?.trim()
   const attachmentHints = state.specialSituations
@@ -87,6 +88,10 @@ export function DocumentUploadPage() {
     }
     if (showSecond106 && !form106Second) {
       setError('יש להעלות גם את טופס 106 של המעסיק השני, או להסיר את השדה הנוסף')
+      return
+    }
+    if (!privacyConsent) {
+      setError('יש לאשר את מדיניות הפרטיות לפני שליחת הקובץ לניתוח')
       return
     }
     setLoading(true)
@@ -322,13 +327,40 @@ export function DocumentUploadPage() {
         )}
 
         {!loading && (
-          <button
-            type="button"
-            onClick={handleAnalyze}
-            className="mt-8 w-full rounded-xl bg-gold py-4 text-base font-bold text-navy shadow-md transition hover:bg-gold-light"
-          >
-            בדוק כמה מגיע לי 🤖
-          </button>
+          <div className="mt-8">
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-navy/10 bg-slate-50/80 p-4 ring-1 ring-navy/5">
+              <input
+                type="checkbox"
+                checked={privacyConsent}
+                onChange={(e) => {
+                  setPrivacyConsent(e.target.checked)
+                  if (e.target.checked) setError(null)
+                }}
+                className="mt-1 h-4 w-4 shrink-0 rounded border-navy/30 text-gold focus:ring-gold"
+                required
+                aria-required="true"
+              />
+              <span className="text-sm leading-relaxed text-navy">
+                קראתי ואני מסכים/ה ל
+                <Link
+                  to="/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mx-0.5 font-semibold text-navy underline decoration-gold underline-offset-2 hover:text-gold"
+                >
+                  מדיניות הפרטיות
+                </Link>
+              </span>
+            </label>
+
+            <button
+              type="button"
+              onClick={handleAnalyze}
+              className="mt-6 w-full rounded-xl bg-gold py-4 text-base font-bold text-navy shadow-md transition hover:bg-gold-light"
+            >
+              בדוק כמה מגיע לי 🤖
+            </button>
+          </div>
         )}
       </div>
     </div>
